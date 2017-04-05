@@ -58,6 +58,7 @@ void queryDrvInfo(const SC_HANDLE& schScManager,
   auto lpsc = static_cast<LPQUERY_SERVICE_CONFIG>(malloc(cbBufSize));
   if (lpsc == nullptr) {
     TLOG << "Failed to malloc for service config data";
+    CloseServiceHandle(schService);
     return;
   }
 
