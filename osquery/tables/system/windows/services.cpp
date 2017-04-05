@@ -1,12 +1,12 @@
 /*
-*  Copyright (c) 2014-present, Facebook, Inc.
-*  All rights reserved.
-*
-*  This source code is licensed under the BSD-style license found in the
-*  LICENSE file in the root directory of this source tree. An additional grant
-*  of patent rights can be found in the PATENTS file in the same directory.
-*
-*/
+ *  Copyright (c) 2014-present, Facebook, Inc.
+ *  All rights reserved.
+ *
+ *  This source code is licensed under the BSD-style license found in the
+ *  LICENSE file in the root directory of this source tree. An additional grant
+ *  of patent rights can be found in the PATENTS file in the same directory.
+ *
+ */
 
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
@@ -57,6 +57,12 @@ bool QuerySvcInfo(const SC_HANDLE& schScManager,
 
   QueryServiceConfig(schService, nullptr, 0, &cbBufSize);
   auto lpsc = (LPQUERY_SERVICE_CONFIG)malloc(cbBufSize);
+  if (lpsc == nullptr) {
+    TLOG << "Failed to malloc for service config data";
+    CloseServiceHandle(schService);
+    return FALSE;
+  }
+
   if (!QueryServiceConfig(schService, lpsc, cbBufSize, &cbBufSize)) {
     TLOG << "QueryServiceConfig failed (" << GetLastError() << ")";
   }
@@ -64,6 +70,13 @@ bool QuerySvcInfo(const SC_HANDLE& schScManager,
   QueryServiceConfig2(
       schService, SERVICE_CONFIG_DESCRIPTION, nullptr, 0, &cbBufSize);
   auto lpsd = (LPSERVICE_DESCRIPTION)malloc(cbBufSize);
+  if (lpsd == nullptr) {
+    TLOG << "Failed to malloc for service description";
+    free(lpsc);
+    CloseServiceHandle(schService);
+    return FALSE;
+  }
+
   if (!QueryServiceConfig2(schService,
                            SERVICE_CONFIG_DESCRIPTION,
                            (LPBYTE)lpsd,
@@ -133,6 +146,12 @@ QueryData genServices(QueryContext& context) {
                              nullptr);
 
   buf = malloc(bytesNeeded);
+  if (buf == nullptr) {
+    TLOG << "Failed to malloc for services status";
+    CloseServiceHandle(schScManager);
+    return {};
+  }
+
   if (EnumServicesStatusEx(schScManager,
                            SC_ENUM_PROCESS_INFO,
                            SERVICE_WIN32,

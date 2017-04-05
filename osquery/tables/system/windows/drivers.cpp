@@ -1,12 +1,12 @@
 /*
-*  Copyright (c) 2014-present, Facebook, Inc.
-*  All rights reserved.
-*
-*  This source code is licensed under the BSD-style license found in the
-*  LICENSE file in the root directory of this source tree. An additional grant
-*  of patent rights can be found in the PATENTS file in the same directory.
-*
-*/
+ *  Copyright (c) 2014-present, Facebook, Inc.
+ *  All rights reserved.
+ *
+ *  This source code is licensed under the BSD-style license found in the
+ *  LICENSE file in the root directory of this source tree. An additional grant
+ *  of patent rights can be found in the PATENTS file in the same directory.
+ *
+ */
 
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
@@ -56,6 +56,11 @@ void queryDrvInfo(const SC_HANDLE& schScManager,
 
   QueryServiceConfig(schService, nullptr, 0, &cbBufSize);
   auto lpsc = static_cast<LPQUERY_SERVICE_CONFIG>(malloc(cbBufSize));
+  if (lpsc == nullptr) {
+    TLOG << "Failed to malloc for service config data";
+    return;
+  }
+
   if (QueryServiceConfig(schService, lpsc, cbBufSize, &cbBufSize) != 0) {
     TLOG << "QueryServiceConfig failed (" << GetLastError() << ")";
   }
@@ -115,7 +120,17 @@ void enumLoadedDrivers(std::map<std::string, std::string>& loadedDrivers) {
 
   if (ret && (driversCount > 0)) {
     auto driverPath = static_cast<LPSTR>(malloc(MAX_PATH + 1));
+    if (driverPath == nullptr) {
+      TLOG << "Failed to malloc for driver path";
+      return;
+    }
+
     auto driverName = static_cast<LPSTR>(malloc(MAX_PATH + 1));
+    if (driverName == nullptr) {
+      TLOG << "Failed to malloc for driver name";
+      free(driverPath);
+      return;
+    }
 
     ZeroMemory(driverPath, MAX_PATH + 1);
     ZeroMemory(driverName, MAX_PATH + 1);
@@ -172,6 +187,11 @@ QueryData genDrivers(QueryContext& context) {
                        nullptr);
 
   auto buf = static_cast<PVOID>(malloc(bytesNeeded));
+  if (buf == nullptr) {
+    TLOG << "Failed to malloc for services info";
+    return {};
+  }
+
   if (EnumServicesStatusEx(schScManager,
                            SC_ENUM_PROCESS_INFO,
                            SERVICE_DRIVER,

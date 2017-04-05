@@ -209,6 +209,7 @@ void* WinSockets::allocateSocketTable(unsigned long protocol,
       if (pSockTable == nullptr) {
         status_ = Status(
             1, "Unable to allocate sufficient memory for the TCP socket table");
+        return nullptr;
       }
     }
     ret = GetExtendedTcpTable(pSockTable,
@@ -236,6 +237,7 @@ void* WinSockets::allocateSocketTable(unsigned long protocol,
       if (pSockTable == nullptr) {
         status_ = Status(
             1, "Unable to allocate sufficient memory for the UDP socket table");
+        return nullptr;
       }
     }
     ret = GetExtendedUdpTable(pSockTable,

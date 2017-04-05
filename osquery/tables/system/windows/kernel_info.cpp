@@ -54,6 +54,10 @@ void GetKernelVersion(Row& r) {
   }
 
   LPSTR verData = (LPSTR)malloc(verSize);
+  if (verData == nullptr) {
+    TLOG << "Failed to malloc for version info data";
+    return;
+  }
 
   if (!GetFileVersionInfo(kNtKernelPath.c_str(), 0, verSize, verData)) {
     TLOG << "GetFileVersionInfo failed (" << GetLastError() << ")";
@@ -62,7 +66,6 @@ void GetKernelVersion(Row& r) {
   if (!VerQueryValue(verData, "\\", (LPVOID*)&lpVersionInfo, &size)) {
     TLOG << "GetFileVersionInfo failed (" << GetLastError() << ")";
   }
-
   if (size > 0) {
     if (lpVersionInfo->dwSignature == 0xfeef04bd) {
       auto majorMS = HIWORD(lpVersionInfo->dwProductVersionMS);
